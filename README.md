@@ -4,6 +4,8 @@ A bare-metal C graphics engine template running directly on the hardware. No OS,
 
 This is a dynamic boilerplate for people who want to build custom graphical setups, retro game engines, or Windows 95-style GUIs from scratch without configuration headaches.
 
+I'm recommended to using Virtual Machine(VM) like QEMU and Oracle Virtual Box.
+
 ##  Included Primitive Functions
 * `put_pixel(x, y, color)` - Direct mathematical pixel plotting.
 * `clear_screen(color)` - Fast full-buffer screen clearing.
