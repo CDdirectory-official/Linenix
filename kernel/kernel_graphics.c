@@ -10,6 +10,7 @@
 
 #include "../include/vga_io.h"  // Path updated: exits kernel/, enters include/
 #include "../fs/ramfs.h"        // Path updated: exits kernel/, enters fs/
+#include "../init/setup_init.h" // Includes the subsystem initialization routines
 
 /* ===========================================================================
  * PURE HARDWARE GRAPHICS ENGINE (VGA MODE 13h)
@@ -98,24 +99,9 @@ void keyboard_handler_c() {
  * ===========================================================================
  */
 void kernel_main() {
-    // Step 1: Render the complete graphical setup UI environment
-    render_setup_ui();
-    
-    // Default interactive button state (White) at the bottom right of the window
-    draw_rectangle(210, 140, 50, 18, WHITE); 
+    // Delegate all dirty work to the initialization subsystem
+    bootstrap_system();
 
-    // Step 2: Initialize Virtual File System (RAMFS) with mock setup configurations
-    create_file("setup.inf", "OS_NAME=TzeOS\nVERSION=1.0\nARCH=x86", 32);
-    create_file("eula.txt", "License: Free to fork. Too lazy to update.", 41);
-
-    // Step 3: Verify the File System works by checking for required setup files
-    char* config_data = read_file("setup.inf");
-    if (config_data != 0) {
-        // File system successfully read! Plot a tiny Cyan pixel indicator 
-        // at the top-left corner of the title bar to signify "FS STATUS: OK"
-        draw_rectangle(45, 36, 4, 4, CYAN);
-    }
-
-    // Step 4: Halt the CPU execution flow and wait for human keyboard inputs
+    // System initialized. CPU safely enters infinite loop waiting for hardware interrupts.
     while(1);
 }
