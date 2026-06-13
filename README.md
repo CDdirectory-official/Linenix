@@ -1,30 +1,20 @@
-**# kernel.c-graphics-setup 
+# kernel.c-graphics-setup 🎨🚀
 
-A bare-metal C graphics engine template running directly on the hardware. No OS, no Linux kernel, no standard libraries, and zero bloat. It directly maps pixels into the x86 VGA Video Memory (`0xA0000`) in **Mode 13h** (320x200 resolution, 256 colors).
+A modular, bare-metal C graphics development framework running directly on raw x86 hardware. No Linux kernel, zero operating system dependencies, no bloated tracking wrappers, and completely freestanding. It structures absolute mapping parameters directly into the VGA Video Memory space (`0xA0000`) utilizing hardware **Mode 13h** ($320 \times 200$ pixels canvas, 256 colors palette).
 
-This is a dynamic boilerplate for people who want to build custom graphical setups, retro game engines, or Windows 95-style GUIs from scratch without configuration headaches.
+This framework contains an ultra-lightweight decoupled system architecture including a **Virtual RAM File System (RAMFS)**, custom inline **Keyboard Hardware Interfacing Drivers**, and isolated **Subsystem Bootstrap Inits**.
 
-I'm recommended to using Virtual Machine(VM) like QEMU and Oracle Virtual Box.
+## 📂 Project Structure
+* `kernel/` - Machine runtime space (`boot.asm`, `kernel_entry.asm`, `kernel_graphics.c`).
+* `init/` - Subsystem environment configurations & hardware verification testing (`setup_init.h`).
+* `include/` - Hardware Abstraction Layers, Port registers, and color definitions (`vga_io.h`).
+* `fs/` - In-memory localized file routing and configuration parsers (`ramfs.h`).
+* `tools/` - Automated cross-compiling deployment tools (`Makefile`).
+* `samples/` - Pre-made layout templates for graphics mapping validation.
 
-##  Included Primitive Functions
-* `put_pixel(x, y, color)` - Direct mathematical pixel plotting.
-* `clear_screen(color)` - Fast full-buffer screen clearing.
-* `draw_rectangle(x, y, width, height, color)` - Nested-loop drawing for UI windows, buttons, or taskbars.
-
-##  Quick Start (Compile & Boot)
-> **Note:** Ensure your bootloader puts the CPU into VGA Mode 13h before jumping to this kernel.
-
-Run these commands in your terminal to compile and run the GUI template inside QEMU:
+## ⚡ Quick Start (One-Click Compilation)
+Ensure you have standard environment dependencies setup (`gcc`, `ld`, `nasm`, and `qemu-system-x86_64`). Drop inside the automation command toolkit directory and trigger the deployment routines:
 
 ```bash
-# 1. Assemble the 32-bit boot entry
-nasm -f elf32 kernel_entry.asm -o k_entry.o
-
-# 2. Compile the graphics kernel without standard libraries
-gcc -m32 -c kernel_graphics.c -o kernel.o -ffreestanding
-
-# 3. Link them into a raw binary mapped at 0x1000
-ld -m elf_i386 -o kernel.bin -Ttext 0x1000 k_entry.o kernel.o --oformat binary
-
-# 4. Fire up the Virtual Machine and watch the pixel magic!
-qemu-system-x86_64 -drive format=raw,file=kernel.bin**
+cd tools
+make run
