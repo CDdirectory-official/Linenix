@@ -1,26 +1,45 @@
 /*
  * kernel.c-graphics-setup
- * Main interactive graphics kernel. Custom setup template for open-source devs.
+ * Core File: kernel_graphics.c
+ * ---------------------------------------------------------------------------
+ * The Ultimate Bare-Metal Interactive Graphics Kernel & Setup Template.
+ * Decoupled architecture featuring VGA Mode 13h, Input Drivers, and RAMFS.
+ * * If you are too lazy to customize this, go to Torvalds' repo, bozo!
+ * ---------------------------------------------------------------------------
  */
 
-#include "vga_io.h" // BOOM! Clean and professional hardware mapping inclusion
+#include "include/vga_io.h"  // Pointing directly to your new include folder!
+#include "fs/ramfs.h"        // Virtual RAM File System Layer
 
-/* Draw a single pixel using math mapping */
+/* ===========================================================================
+ * PURE HARDWARE GRAPHICS ENGINE (VGA MODE 13h)
+ * ===========================================================================
+ */
+
+/**
+ * Plot a single pixel directly into the VGA video memory buffer.
+ * Memory Formula: Video_Address + (Y * 320) + X
+ */
 void put_pixel(int x, int y, unsigned char color) {
     if (x >= 0 && x < SCREEN_WIDTH && y >= 0 && y < SCREEN_HEIGHT) {
         VGA_MEMORY[(y * SCREEN_WIDTH) + x] = color;
     }
 }
 
-/* Clear screen with a solid background color */
+/**
+ * Flood-fill the entire screen with a specific VGA color palette byte.
+ */
 void clear_screen(unsigned char color) {
-    int total_pixels = SCREEN_WIDTH * SCREEN_HEIGHT;
+    int total_pixels = SCREEN_WIDTH * SCREEN_HEIGHT; // 64,000 pixels total
     for (int i = 0; i < total_pixels; i++) {
         VGA_MEMORY[i] = color;
     }
 }
 
-/* Draw filled rectangle for UI windows or buttons */
+/**
+ * Draw a solid filled rectangle. 
+ * Perfect for rendering low-level GUI windows, buttons, or dialog boxes.
+ */
 void draw_rectangle(int x, int y, int width, int height, unsigned char color) {
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
@@ -29,39 +48,74 @@ void draw_rectangle(int x, int y, int width, int height, unsigned char color) {
     }
 }
 
-/* Render the initial graphical setup layout (Windows 95 style) */
+/**
+ * Render the baseline graphical environment layout (Retro Windows 95 Style).
+ */
 void render_setup_ui() {
-    clear_screen(DARK_GRAY);                    // Background
-    draw_rectangle(40, 30, 240, 140, BLACK);    // Window Shadow
-    draw_rectangle(42, 32, 236, 136, LIGHT_GRAY); // Window Body
-    draw_rectangle(42, 32, 236, 20, BLUE);      // Title Bar
+    clear_screen(DARK_GRAY);                      // OS Desktop Background
+    draw_rectangle(40, 30, 240, 140, BLACK);      // Window Drop-Shadow
+    draw_rectangle(42, 32, 236, 136, LIGHT_GRAY); // Main Window Canvas Body
+    draw_rectangle(42, 32, 236, 20, BLUE);        // Graphical Title Bar
 }
 
-/* Keyboard Interrupt Handler for real-time interaction */
+/* ===========================================================================
+ * BARE-METAL KEYBOARD INTERRUPT DRIVER (PORT I/O)
+ * ===========================================================================
+ */
+
+/**
+ * Core Keyboard Interrupt Handler.
+ * Reads scancodes directly from Port 0x60 and manipulates the UI in real-time.
+ */
 void keyboard_handler_c() {
+    // Read raw hardware data from keyboard controller register
     unsigned char scancode = inb(KEYBOARD_PORT);
 
+    // Bit 0x80 checks if the key was released. We only care about keypresses.
     if (scancode & 0x80) {
-        // Key released - do nothing
+        // Key released - ignored
     } else {
-        // Interactivity: Press 'Enter' (0x1C) to flash the "Next" button green
+        /* INTERACTIVE UI ACTIONS */
+        
+        // Action 1: If user presses 'Enter' (Scancode 0x1C), flash the "Next" button green
         if (scancode == 0x1C) {
             draw_rectangle(210, 140, 50, 18, GREEN);
         }
-        // Interactivity: Press 'Escape' (0x01) to flash the window body red
+        
+        // Action 2: If user presses 'Escape' (Scancode 0x01), flash window body red (Error simulation)
         else if (scancode == 0x01) {
-            draw_rectangle(42, 32, 236, 136, RED);
+            draw_rectangle(42, 52, 236, 116, RED);
         }
     }
 
-    // Send End of Interrupt (EOI) signal to PIC using our new outb function
+    // MANDATORY: Send End of Interrupt (EOI) signal back to the PIC hardware chip.
+    // Without this line, the keyboard will lock up after the first keypress.
     outb(PIC_COMMAND_PORT, PIC_EOI_COMMAND);
 }
 
-/* Ultimate Graphical Entry Point */
+/* ===========================================================================
+ * KERNEL ENTRY POINT
+ * ===========================================================================
+ */
 void kernel_main() {
+    // Step 1: Render the complete graphical setup UI environment
     render_setup_ui();
-    draw_rectangle(210, 140, 50, 18, WHITE); // Draw the interactive button
+    
+    // Default interactive button state (White) at the bottom right of the window
+    draw_rectangle(210, 140, 50, 18, WHITE); 
 
-    while(1); // Wait for hardware interrupts
+    // Step 2: Initialize Virtual File System (RAMFS) with mock setup configurations
+    create_file("setup.inf", "OS_NAME=TzeOS\nVERSION=1.0\nARCH=x86", 32);
+    create_file("eula.txt", "License: Free to fork. Too lazy to update.", 41);
+
+    // Step 3: Verify the File System works by checking for required setup files
+    char* config_data = read_file("setup.inf");
+    if (config_data != 0) {
+        // File system successfully read! Plot a tiny Cyan pixel indicator 
+        // at the top-left corner of the title bar to signify "FS STATUS: OK"
+        draw_rectangle(45, 36, 4, 4, CYAN);
+    }
+
+    // Step 4: Halt the CPU execution flow and wait for human keyboard inputs
+    while(1);
 }
