@@ -70,7 +70,7 @@ void kernel_panic(char* error_message) {
     print_string("\n!!!!!!!!!!!!!!!! KERNEL PANIC !!!!!!!!!!!!!!!!\n", 0x0C); // 0x0C is Red
     print_string("ERROR: ", 0x0C);
     print_string(error_message, 0x0C);
-    print_string("\nSystem halted. Please restart your VM, bozo.\n", 0x0C);
+    print_string("\nSystem halted. Please restart your VM, baby.\n", 0x0C);
     
     // Freeze the CPU completely
     while(1);
