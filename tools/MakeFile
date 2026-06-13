@@ -1,5 +1,5 @@
 # ==============================================================================
-# tools/Makefile - Automated Bare-Metal Build System
+# tools/Makefile - Automated Bare-Metal Build System (Folder Kernel Edition)
 # Multi-stage compilation for the graphics setup kernel framework.
 # ==============================================================================
 
@@ -11,7 +11,7 @@ ASMFLAGS = -f elf32
 LD = ld
 LDFLAGS = -m elf_i386 -Ttext 0x1000 --oformat binary
 
-# Output binaries
+# Output binaries and temporary objects
 TARGET = ../tzeos_setup.bin
 ENTRY_OBJ = k_entry.o
 KERNEL_OBJ = kernel.o
@@ -21,28 +21,28 @@ KERNEL_OBJ = kernel.o
 # Default target: Build everything
 all: $(TARGET)
 
-# Stage 1: Assemble the 32-bit boot entry point
-$(ENTRY_OBJ): ../kernel_entry.asm
-	@echo "[ASM] Assembling bootloader entry..."
-	@$(ASM) $(ASMFLAGS) ../kernel_entry.asm -o $(ENTRY_OBJ)
+# Stage 1: Assemble the 32-bit boot entry point from kernel/ folder
+$(ENTRY_OBJ): ../kernel/kernel_entry.asm
+	@echo "[ASM] Assembling bootloader entry from kernel folder..."
+	@$(ASM) $(ASMFLAGS) ../kernel/kernel_entry.asm -o $(ENTRY_OBJ)
 
-# Stage 2: Compile the interactive graphics core kernel
-$(KERNEL_OBJ): ../kernel_graphics.c ../vga_io.h ../fs/ramfs.h
-	@echo "[CC] Compiling core graphics kernel..."
-	@$(CC) $(CFLAGS) ../kernel_graphics.c -o $(KERNEL_OBJ)
+# Stage 2: Compile the interactive core kernel from kernel/ folder
+$(KERNEL_OBJ): ../kernel/kernel_graphics.c ../include/vga_io.h ../fs/ramfs.h
+	@echo "[CC] Compiling core graphics kernel from kernel folder..."
+	@$(CC) $(CFLAGS) ../kernel/kernel_graphics.c -o $(KERNEL_OBJ)
 
 # Stage 3: Link objects into a raw, flat binary mapped at 0x1000
 $(TARGET): $(ENTRY_OBJ) $(KERNEL_OBJ)
 	@echo "[LD] Linking objects into raw machine binary..."
 	@$(LD) $(LDFLAGS) $(ENTRY_OBJ) $(KERNEL_OBJ) -o $(TARGET)
-	@echo "[SUCCESS] Build complete! Output located at: $(TARGET)"
+	@echo "[SUCCESS] Build complete! Output located at root: $(TARGET)"
 
-# Shortcut: Clean up compilation trash files
+# Shortcut: Clean up compilation trash object files
 clean:
-	@echo "[CLEAN] Removing object files..."
+	@echo "[CLEAN] Removing object files and binary..."
 	@rm -f *.o $(TARGET)
 
-# Shortcut: Compile and instantly launch the virtual machine
+# Shortcut: Compile and instantly launch the virtual machine in one click
 run: all
 	@echo "[QEMU] Firing up the kernel framework..."
 	@qemu-system-x86_64 -drive format=raw,file=$(TARGET)
