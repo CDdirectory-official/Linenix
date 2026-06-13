@@ -1,48 +1,49 @@
 # ==============================================================================
-# tools/Makefile - Automated Bare-Metal Build System (Modular Kernel Edition)
-# Multi-stage compilation for the graphics setup kernel framework.
+# File Path: tools/Makefile
+# Description: Fully automated, zero-configuration cross-building toolkit.
 # ==============================================================================
 
-# Compiler and Linker flags for pure freestanding x86 execution
 CC = gcc
 CFLAGS = -m32 -c -ffreestanding -O2 -Wall -Wextra
 ASM = nasm
-ASMFLAGS = -f elf32
 LD = ld
 LDFLAGS = -m elf_i386 -Ttext 0x1000 --oformat binary
 
-# Output binaries and temporary objects
-TARGET = ../tzeos_setup.bin
+TARGET = ../tzeos_image.bin
+BOOT_BIN = boot.bin
+KERNEL_BIN = kernel.bin
 ENTRY_OBJ = k_entry.o
 KERNEL_OBJ = kernel.o
 
 .PHONY: all clean run
 
-# Default target: Build everything
 all: $(TARGET)
 
-# Stage 1: Assemble the 32-bit boot entry point from kernel/ folder
-$(ENTRY_OBJ): ../kernel/kernel_entry.asm
-	@echo "[ASM] Assembling bootloader entry from kernel directory..."
-	@$(ASM) $(ASMFLAGS) ../kernel/kernel_entry.asm -o $(ENTRY_OBJ)
+$(BOOT_BIN): ../kernel/boot.asm
+	@echo "[ASM] Assembling MBR Stage 1 Boot Sector..."
+	@$(ASM) -f bin ../kernel/boot.asm -o $(BOOT_BIN)
 
-# Stage 2: Compile the core kernel and monitor include, fs, and init changes
+$(ENTRY_OBJ): ../kernel/kernel_entry.asm
+	@echo "[ASM] Compiling Protected Mode interrupt descriptors..."
+	@$(ASM) -f elf32 ../kernel/kernel_entry.asm -o $(ENTRY_OBJ)
+
 $(KERNEL_OBJ): ../kernel/kernel_graphics.c ../include/vga_io.h ../fs/ramfs.h ../init/setup_init.h
-	@echo "[CC] Compiling core graphics kernel with initialization routines..."
+	@echo "[CC] Transpiling kernel core layout logic..."
 	@$(CC) $(CFLAGS) ../kernel/kernel_graphics.c -o $(KERNEL_OBJ)
 
-# Stage 3: Link objects into a raw, flat binary mapped at 0x1000
-$(TARGET): $(ENTRY_OBJ) $(KERNEL_OBJ)
-	@echo "[LD] Linking objects into raw machine binary..."
-	@$(LD) $(LDFLAGS) $(ENTRY_OBJ) $(KERNEL_OBJ) -o $(TARGET)
-	@echo "[SUCCESS] Build complete! Output located at root: $(TARGET)"
+$(KERNEL_BIN): $(ENTRY_OBJ) $(KERNEL_OBJ)
+	@echo "[LD] Linking absolute machine addressing segments..."
+	@$(LD) $(LDFLAGS) $(ENTRY_OBJ) $(KERNEL_OBJ) -o $(KERNEL_BIN)
 
-# Shortcut: Clean up compilation artifacts and trash files
+$(TARGET): $(BOOT_BIN) $(KERNEL_BIN)
+	@echo "[IMG] Injecting binary blocks into clean raw Master Boot Image..."
+	@cat $(BOOT_BIN) $(KERNEL_BIN) > $(TARGET)
+	@echo "[SUCCESS] Execution binary assembled at project root directory!"
+
 clean:
-	@echo "[CLEAN] Removing object files and binary..."
-	@rm -f *.o $(TARGET)
+	@echo "[CLEAN] Destroying volatile machine artifacts..."
+	@rm -f *.o *.bin $(TARGET)
 
-# Shortcut: Compile and instantly launch the virtual machine environment
 run: all
-	@echo "[QEMU] Firing up the kernel framework..."
+	@echo "[QEMU] Initiating bare-metal hardware execution matrix..."
 	@qemu-system-x86_64 -drive format=raw,file=$(TARGET)
