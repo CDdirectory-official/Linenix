@@ -1,6 +1,6 @@
 /*
  * File Path: kernel/kernel_graphics.c
- * Description: The main bare-metal runtime logic loop and rendering operations.
+ * Description: Main bare-metal runtime loop execution and system orchestration.
  */
 
 #include "../include/vga_io.h"
@@ -48,8 +48,8 @@ void render_setup_ui() {
 void keyboard_handler_c() {
     unsigned char scancode = inb(KEYBOARD_PORT);
 
-    if (!(scancode & 0x80)) { // On Keypress events
-        if (scancode == 0x1C) {       // Enter Key -> Turn button GREEN
+    if (!(scancode & 0x80)) { // Active Keypress events
+        if (scancode == 0x1C) {       // Enter Key -> Flash button GREEN
             draw_rectangle(210, 140, 50, 18, GREEN);
         } else if (scancode == 0x01) { // Escape Key -> Crash/Flash window RED
             draw_rectangle(42, 52, 236, 116, RED);
