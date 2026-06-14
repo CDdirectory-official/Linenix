@@ -6,6 +6,7 @@
 #include "../include/vga_io.h"
 #include "../fs/ramfs.h"
 #include "../init/setup_init.h"
+#include "../drivers/video/font.h" // BOOM! Font Engine Mounted
 
 /* ===========================================================================
  * GRAPHICS RENDERING ARCHITECTURE
@@ -38,6 +39,9 @@ void render_setup_ui() {
     draw_rectangle(40, 30, 240, 140, BLACK);
     draw_rectangle(42, 32, 236, 136, LIGHT_GRAY);
     draw_rectangle(42, 32, 236, 20, BLUE);
+
+    // Write a beautiful clean string over our Blue Title Bar
+    draw_string("TzeOS SETUP", 50, 38, WHITE);
 }
 
 /* ===========================================================================
@@ -49,10 +53,12 @@ void keyboard_handler_c() {
     unsigned char scancode = inb(KEYBOARD_PORT);
 
     if (!(scancode & 0x80)) { // Active Keypress events
-        if (scancode == 0x1C) {       // Enter Key -> Flash button GREEN
+        if (scancode == 0x1C) {       // Enter Key -> Flash button GREEN and overlay text
             draw_rectangle(210, 140, 50, 18, GREEN);
+            draw_string("NEXT", 222, 145, WHITE);
         } else if (scancode == 0x01) { // Escape Key -> Crash/Flash window RED
             draw_rectangle(42, 52, 236, 116, RED);
+            draw_string("PANIC", 130, 95, WHITE);
         }
     }
     outb(PIC_COMMAND_PORT, PIC_EOI_COMMAND);
@@ -64,5 +70,9 @@ void keyboard_handler_c() {
  */
 void kernel_main() {
     bootstrap_system();
+    
+    // Draw string inside our default white button state
+    draw_string("NEXT", 222, 145, BLACK);
+    
     while(1);
 }
