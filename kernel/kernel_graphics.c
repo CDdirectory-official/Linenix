@@ -33,7 +33,7 @@ void render_setup_ui() {
     draw_rectangle(40, 30, 240, 140, BLACK);
     draw_rectangle(42, 32, 236, 136, LIGHT_GRAY);
     draw_rectangle(42, 32, 236, 20, BLUE);
-    draw_string("TzeOS SETUP", 50, 38, WHITE);
+    draw_string("KERNEL SETUP", 50, 38, WHITE);
 }
 
 void syscall_handler_c() {
