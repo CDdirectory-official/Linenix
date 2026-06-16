@@ -1,6 +1,6 @@
 # ==============================================================================
 # File Path: tools/Makefile
-# Description: Fully automated, zero-configuration cross-building toolkit.
+# Description: Cross-Building System tracking Core, Init, FS, MM, Drivers, and Shell.
 # ==============================================================================
 
 CC = gcc
@@ -27,8 +27,9 @@ $(ENTRY_OBJ): ../kernel/kernel_entry.asm
 	@echo "[ASM] Compiling Protected Mode interrupt descriptors..."
 	@$(ASM) -f elf32 ../kernel/kernel_entry.asm -o $(ENTRY_OBJ)
 
-$(KERNEL_OBJ): ../kernel/kernel_graphics.c ../include/vga_io.h ../fs/ramfs.h ../init/setup_init.h
-	@echo "[CC] Transpiling kernel core layout logic..."
+# Tracks changes inside the new shell/kshell.h subsystem header
+$(KERNEL_OBJ): ../kernel/kernel_graphics.c ../include/vga_io.h ../fs/ramfs.h ../init/setup_init.h ../mm/pmm.h ../drivers/video/font.h ../ipc/mailbox.h ../shell/kshell.h
+	@echo "[CC] Transpiling kernel core with Interactive Shell active..."
 	@$(CC) $(CFLAGS) ../kernel/kernel_graphics.c -o $(KERNEL_OBJ)
 
 $(KERNEL_BIN): $(ENTRY_OBJ) $(KERNEL_OBJ)
@@ -38,7 +39,7 @@ $(KERNEL_BIN): $(ENTRY_OBJ) $(KERNEL_OBJ)
 $(TARGET): $(BOOT_BIN) $(KERNEL_BIN)
 	@echo "[IMG] Injecting binary blocks into clean raw Master Boot Image..."
 	@cat $(BOOT_BIN) $(KERNEL_BIN) > $(TARGET)
-	@echo "[SUCCESS] Execution binary assembled at project root directory!"
+	@echo "[SUCCESS] Interactive Terminal Command Shell built!"
 
 clean:
 	@echo "[CLEAN] Destroying volatile machine artifacts..."
