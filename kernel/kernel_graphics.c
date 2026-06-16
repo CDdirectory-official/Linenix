@@ -1,7 +1,7 @@
 /*
  * File Path: kernel/kernel_graphics.c
  * Description: Main core pipeline for Linenix Kernel. 
- * Handles Graphics rendering, Syscall routing, and Full Keyboard I/O translation.
+ * Handles Graphics rendering, Syscall routing, Full Keyboard I/O, and Serial Connection.
  */
 
 #include "../include/vga_io.h"
@@ -11,6 +11,7 @@
 #include "../ipc/mailbox.h"
 #include "../shell/kshell.h"
 #include "../kernel/scheduler.h"
+#include "../drivers/serial/uart.h" // BOOM! Connected to the outside world
 
 /* ===========================================================================
  * 1. GRAPHICS RENDERING SUBSYSTEM (Low-Level Pixel Mapping)
@@ -61,7 +62,6 @@ void syscall_handler_c() {
 /* ===========================================================================
  * 3. HARDWARE INTERRUPT CALLBACK: FULL KEYBOARD I/O TRANSLATION MATRIX
  * ===========================================================================
- * DI SINI TEMPATNYA, TZE! MENGGANTIKAN DRIVER KEYBOARD YANG LAMA.
  */
 void keyboard_handler_c() {
     unsigned char scancode = inb(KEYBOARD_PORT);
@@ -129,15 +129,13 @@ void keyboard_handler_c() {
 }
 
 /* ===========================================================================
- * 4. KERNEL ENTRY POINT SUBROUTINE (Called by kernel_entry.asm)
+ * 4. LINENIX CORE PANIC ENGINE (The Ultimate Doomsday Device)
  * ===========================================================================
  */
-void kernel_main() {
-    bootstrap_system();
-    draw_string("NEXT", 222, 145, BLACK);
-    
-    // Initialize the console interface terminal layout
-    init_shell();
-    
-    while(1); // Stay alive and let PIT timer interrupts swap task contexts
-}
+void linenix_panic(const char* error_code, const char* description) {
+    // 1. Instantly halt all hardware interrupts and freeze the scheduler
+    __asm__ volatile("cli");
+
+    // Send the bad news out through the serial wire before crashing hard
+    write_serial_string("\r\n!!! CRITICAL KERNEL PANIC TRAPPED !!!\r\n");
+    write_serial_string("Error: "); write_serial_string(error
