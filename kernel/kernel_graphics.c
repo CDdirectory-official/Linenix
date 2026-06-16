@@ -8,7 +8,8 @@
 #include "../init/setup_init.h"
 #include "../drivers/video/font.h"
 #include "../ipc/mailbox.h"
-#include "../shell/kshell.h" // BOOM! Interactive Kernel Shell Mounted
+#include "../shell/kshell.h"
+#include "../kernel/scheduler.h" # BOOM! Scheduler Mounted
 
 /* ===========================================================================
  * GRAPHICS RENDERING ARCHITECTURE (Unchanged core systems)
