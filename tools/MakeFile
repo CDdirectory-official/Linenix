@@ -1,50 +1,87 @@
 # ==============================================================================
 # File Path: tools/Makefile
-# Description: Cross-Building System tracking Core, Init, FS, MM, Drivers, and Shell.
+# Description: Automated Enterprise Cross-Building Toolchain Configuration.
+# Compiles, links, and validates the multi-language ur kernel ecosystem.
 # ==============================================================================
 
+# Cross-Compiler and Architecture Flags for Pure Freestanding x86 32-bit Execution
 CC = gcc
 CFLAGS = -m32 -c -ffreestanding -O2 -Wall -Wextra
 ASM = nasm
 LD = ld
+
+# absolute mapping at 0x1000 memory offset space in flat binary layout format
 LDFLAGS = -m elf_i386 -Ttext 0x1000 --oformat binary
 
+# Global Deployment Binary Targets
 TARGET = ../tzeos_image.bin
 BOOT_BIN = boot.bin
 KERNEL_BIN = kernel.bin
+
+# Intermediate Machine Compiling Objects
 ENTRY_OBJ = k_entry.o
 KERNEL_OBJ = kernel.o
 
 .PHONY: all clean run
 
+# Default target execution sequence
 all: $(TARGET)
 
+# ------------------------------------------------------------------------------
+# STAGE 1: ASSEMBLE REAL MODE STAGE 1 MBR BOOTLOADER
+# ------------------------------------------------------------------------------
 $(BOOT_BIN): ../kernel/boot.asm
-	@echo "[ASM] Assembling MBR Stage 1 Boot Sector..."
+	@echo "[ASM] Assembling 16-Bit MBR Stage 1 Boot Sector..."
 	@$(ASM) -f bin ../kernel/boot.asm -o $(BOOT_BIN)
 
+# ------------------------------------------------------------------------------
+# STAGE 2: ASSEMBLE PROTECTED MODE INTERRUPT DESCRIPTOR ROUTINES
+# ------------------------------------------------------------------------------
 $(ENTRY_OBJ): ../kernel/kernel_entry.asm
-	@echo "[ASM] Compiling Protected Mode interrupt descriptors..."
+	@echo "[ASM] Compiling 32-Bit Protected Mode Interrupt Vector Traps..."
 	@$(ASM) -f elf32 ../kernel/kernel_entry.asm -o $(ENTRY_OBJ)
 
-# Tracks changes inside the new shell/kshell.h subsystem header
-$(KERNEL_OBJ): ../kernel/kernel_graphics.c ../include/vga_io.h ../fs/ramfs.h ../init/setup_init.h ../mm/pmm.h ../drivers/video/font.h ../ipc/mailbox.h ../shell/kshell.h
-	@echo "[CC] Transpiling kernel core with Interactive Shell active..."
+# ------------------------------------------------------------------------------
+# STAGE 3: COMPILE CORE C RUNTimes AND MONITOR EVERY HEADERS SUBSYSTEM
+# ------------------------------------------------------------------------------
+$(KERNEL_OBJ): ../kernel/kernel_graphics.c \
+               ../include/vga_io.h \
+               ../fs/ramfs.h \
+               ../init/setup_init.h \
+               ../mm/pmm.h \
+               ../drivers/video/font.h \
+               ../ipc/mailbox.h \
+               ../shell/kshell.h
+	@echo "[CC] Transpiling core architecture execution blocks (MMU/Shell Active)..."
 	@$(CC) $(CFLAGS) ../kernel/kernel_graphics.c -o $(KERNEL_OBJ)
 
+# ------------------------------------------------------------------------------
+# STAGE 4: LINK OBJECT FILES INTO HIGH-LEVEL ABSOLUTE ADDRESS RUNTIME PAYLOAD
+# ------------------------------------------------------------------------------
 $(KERNEL_BIN): $(ENTRY_OBJ) $(KERNEL_OBJ)
 	@echo "[LD] Linking absolute machine addressing segments..."
 	@$(LD) $(LDFLAGS) $(ENTRY_OBJ) $(KERNEL_OBJ) -o $(KERNEL_BIN)
 
+# ------------------------------------------------------------------------------
+# STAGE 5: CONCATENATE SEGMENTS & TRIGGER PYTHON INTEGRITY SANITY CHECKER
+# ------------------------------------------------------------------------------
 $(TARGET): $(BOOT_BIN) $(KERNEL_BIN)
 	@echo "[IMG] Injecting binary blocks into clean raw Master Boot Image..."
 	@cat $(BOOT_BIN) $(KERNEL_BIN) > $(TARGET)
-	@echo "[SUCCESS] Interactive Terminal Command Shell built!"
+	@echo "[SUCCESS] Machine code generated at project root directory!"
+	@echo "[TOOL] Invoking internal Python analysis engine..."
+	@python3 size_checker.py
 
+# ------------------------------------------------------------------------------
+# QUICK SHORTCUT CLEANUP MANAGEMENT SYSTEM
+# ------------------------------------------------------------------------------
 clean:
-	@echo "[CLEAN] Destroying volatile machine artifacts..."
+	@echo "[CLEAN] Destroying volatile machine compiling artifacts..."
 	@rm -f *.o *.bin $(TARGET)
 
+# ------------------------------------------------------------------------------
+# QUICK SHORTCUT VIRTUAL HARDWARE EMULATOR DEPLOYMENT
+# ------------------------------------------------------------------------------
 run: all
-	@echo "[QEMU] Initiating bare-metal hardware execution matrix..."
+	@echo "[QEMU] Initiating bare-metal hardware simulation matrix..."
 	@qemu-system-x86_64 -drive format=raw,file=$(TARGET)
