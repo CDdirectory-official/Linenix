@@ -7,7 +7,7 @@ Description: Automated Binary Integrity & Boot Sector Size Analyzer for TzeOS.
 import os
 import sys
 
-TARGET_IMAGE = "../tzeos_image.bin"
+TARGET_IMAGE = "../os_image.bin"
 
 def analyze_kernel_image():
     print("[PYTHON] Starting binary integrity scan...")
